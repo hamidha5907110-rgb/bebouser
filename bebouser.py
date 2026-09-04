@@ -1400,15 +1400,10 @@ async def cmd_menu(event):
     """
     if video_file_id and os.path.exists(video_file_id):
         try:
-            # Small video frame upper side -> video_note=True
-            await client.send_file(event.chat_id, video_file_id, video_note=True)
-            await event.reply(menu)
+            # Send as standard media (video/photo) with the menu as the integrated caption
+            await client.send_file(event.chat_id, video_file_id, caption=menu)
         except Exception:
-            try:
-                # Fallback to regular media + caption if video_note fails
-                await client.send_file(event.chat_id, video_file_id, caption=menu)
-            except Exception:
-                await event.reply(menu)
+            await event.reply(menu)
     else:
         await event.reply(menu)
 
@@ -1481,13 +1476,10 @@ async def cmd_flowmenu(event):
     """
     if video_file_id and os.path.exists(video_file_id):
         try:
-            await client.send_file(event.chat_id, video_file_id, video_note=True)
-            await event.reply(menu)
+            # Send as standard media (video/photo) with the menu as the integrated caption
+            await client.send_file(event.chat_id, video_file_id, caption=menu)
         except Exception:
-            try:
-                await client.send_file(event.chat_id, video_file_id, caption=menu)
-            except Exception:
-                await event.reply(menu)
+            await event.reply(menu)
     else:
         await event.reply(menu)
 
