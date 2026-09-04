@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-SID BEBO ULTIMATE – DYNAMIC USERBOT
-Merges SID's core with BEBO's advanced raid/spam engine, flow mode,
+BEBO ULTIMATE – DYNAMIC USERBOT
+Merges BEBO's core with BEBO's advanced raid/spam engine, flow mode,
 video menu, security locks, and cloud hosting dummy server.
 All rights reserved.
 """
@@ -59,13 +59,13 @@ API_ID = int(os.getenv("API_ID", "38843772"))
 API_HASH = os.getenv("API_HASH", "875fbb273801c8025d05e98173fca536")
 PHONE_NUMBER = os.getenv("PHONE_NUMBER", "+917722026588")
 OWNER_ID = int(os.getenv("OWNER_ID", "2119464081"))
-SESSION_NAME = os.getenv("SESSION_NAME", "sid_bebo_userbot")
+SESSION_NAME = os.getenv("SESSION_NAME", "bebo_userbot")
 
 # Logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("sid_bebo.log"), logging.StreamHandler()],
+    handlers=[logging.FileHandler("bebo.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class DummyHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(b"SID BEBO Ultimate is running 24/7!")
+        self.wfile.write(b"BEBO Ultimate is running 24/7!")
 
 def start_dummy_server():
     port = int(os.environ.get("PORT", 8080))
@@ -126,18 +126,18 @@ def save_video_id(vid: str):
 load_bot_state()
 
 # ------------------------- TEXT LISTS (Merged) -------------------------
-# Original SID texts
+# Original BEBO texts
 RAID_TEXTS = [
-    "🔥 SID IS HERE TO DOMINATE! BOW DOWN! 🔥",
-    "💀 YOUR CHAT BELONGS TO SID NOW! 💀",
-    "⚡ FEEL THE POWER OF SID'S ULTIMATE BOT! ⚡",
-    "🗑️ THIS CHAT IS TRASH, SID IS CLEANING IT UP! 🗑️",
-    "💥 SID ULTIMATE STRIKES AGAIN! 💥",
-    "👑 SID IS THE KING HERE! RESPECT THE NAME! 👑",
-    "🌪️ A TSUNAMI OF SPAM BY SID! 🌪️",
-    "🩸 NO MERCY FROM SID ULTIMATE! 🩸",
-    "🚫 ALL YOUR EFFORTS ARE USELESS AGAINST SID! 🚫",
-    "💣 PREPARE FOR TOTAL DESTRUCTION! SID IS IN CONTROL! 💣"
+    "🔥 BEBO IS HERE TO DOMINATE! BOW DOWN! 🔥",
+    "💀 YOUR CHAT BELONGS TO BEBO NOW! 💀",
+    "⚡ FEEL THE POWER OF BEBO'S ULTIMATE BOT! ⚡",
+    "🗑️ THIS CHAT IS TRASH, BEBO IS CLEANING IT UP! 🗑️",
+    "💥 BEBO ULTIMATE STRIKES AGAIN! 💥",
+    "👑 BEBO IS THE KING HERE! RESPECT THE NAME! 👑",
+    "🌪️ A TSUNAMI OF SPAM BY BEBO! 🌪️",
+    "🩸 NO MERCY FROM BEBO ULTIMATE! 🩸",
+    "🚫 ALL YOUR EFFORTS ARE USELESS AGAINST BEBO! 🚫",
+    "💣 PREPARE FOR TOTAL DESTRUCTION! BEBO IS IN CONTROL! 💣"
 ]
 
 GAALI_LIST = [
@@ -247,12 +247,11 @@ roast_list = [
 
 all_texts = reply_texts + rr_texts + fun_texts + flag_texts + heart_replies + attack_list + roast_list
 
-# ------------------------- ADVANCED STATE (SID COMPATIBLE) -------------------------
-# Use the same file names as sidkaauser.py for compatibility
+# ------------------------- ADVANCED STATE (BEBO COMPATIBLE) -------------------------
 SAFE_USERS_FILE = "safe_users.json"
 AUTO_DELETE_FILE = "auto_delete.json"
 DELETE_USERS_FILE = "delete_users.json"
-ADV_STATE_FILE = "sid_state.json"   # changed from adv_state.json to match first script
+ADV_STATE_FILE = "bebo_state.json"
 
 COUNTRY_EMOJIS = ["🇮🇳", "🇺🇸", "🇬🇧", "🇨🇦", "🇦🇺", "🇩🇪", "🇫🇷", "🇯🇵", "🇰🇷", "🇨🇳", "🇷🇺", "🇧🇷", "🇮🇹", "🇪🇸", "🇵🇰", "🇧🇩", "🇳🇵", "🇱🇰", "🇦🇪", "🇸🇦"]
 RANDOM_EMOJIS = ["🔥", "⚡", "✨", "🌟", "⭐", "💫", "🌙", "☀️", "❤️", "🧡", "💛", "💚", "💙", "💜", "😀", "😃", "😄", "😁", "👍", "👎"]
@@ -266,7 +265,7 @@ CFG = NORMAL.copy()
 MUTE_TABLE = (300, 900, 1800, 3600, 21600)
 
 class BotState:
-    """Unified state manager – compatible with both SID and BEBO."""
+    """Unified state manager – compatible with BEBO."""
     def __init__(self):
         self.safe_users: Set[int] = set()
         self.safe_usernames: Dict[str, int] = {}
@@ -291,7 +290,7 @@ class BotState:
         self.emergency_active: Dict[int, bool] = {}
 
         self.metrics = {"start": time.monotonic(), "msg": 0, "mutes": 0, "swipes": 0}
-        self.namechange_delays: Dict[int, float] = {}   # for dynamic delay
+        self.namechange_delays: Dict[int, float] = {}
 
         self.load_data()
 
@@ -414,9 +413,6 @@ async def is_authorized(event) -> bool:
     if state.is_user_safe(sender_id, username):
         return True
 
-    try:
-        await event.reply("sid ko baap bana ke aa randyke!! 🖕💩")
-    except: pass
     return False
 
 def command(cmd):
@@ -642,7 +638,7 @@ async def cmd_on(event):
     if not bot_on:
         bot_on = True
         save_bot_state()
-        await event.reply("✅ SID BEBO is now **ON**.")
+        await event.reply("✅ BEBO is now **ON**.")
     else:
         await event.reply("ℹ️ Already ON.")
 
@@ -652,7 +648,7 @@ async def cmd_off(event):
     if bot_on:
         bot_on = False
         save_bot_state()
-        await event.reply("🔴 SID BEBO is now **OFF**.")
+        await event.reply("🔴 BEBO is now **OFF**.")
     else:
         await event.reply("ℹ️ Already OFF.")
 
@@ -677,7 +673,7 @@ async def cmd_stats(event):
     days, remainder = divmod(uptime_seconds, 86400)
     hours, remainder = divmod(remainder, 3600)
     minutes, seconds = divmod(remainder, 60)
-    stats = f"""📊 **SID BEBO Stats**
+    stats = f"""📊 **BEBO Stats**
 • Uptime: `{int(days)}d {int(hours)}h {int(minutes)}m {int(seconds)}s`
 • State: `{'ON' if bot_on else 'OFF'}`
 • Flow Mode: `{'ON' if flow_mode else 'OFF'}`
@@ -700,7 +696,7 @@ async def cmd_info(event):
 
 @command("restart")
 async def cmd_restart(event):
-    await event.reply("🔄 Restarting SID BEBO...")
+    await event.reply("🔄 Restarting BEBO...")
     save_bot_state()
     save_flow_state()
     save_saved_texts()
@@ -825,7 +821,7 @@ async def cmd_sstop(event):
     else:
         await event.reply("ℹ️ No limited raid running.")
 
-# ------------------------- ORIGINAL SID RAID (.raid) -------------------------
+# ------------------------- ORIGINAL BEBO RAID (.raid) -------------------------
 @command("raid")
 async def cmd_raid(event):
     args = event.text.strip().split()
@@ -838,40 +834,40 @@ async def cmd_raid(event):
 
     chat_id = event.chat_id
     # use a separate task name to avoid conflict
-    if "sid_raid" in active_tasks:
-        return await event.reply("⚠️ A SID raid is already running. Use `.stopraid` first.")
-    active_tasks["sid_raid"] = asyncio.create_task(sid_raid_loop(event, chat_id, count))
+    if "bebo_raid" in active_tasks:
+        return await event.reply("⚠️ A BEBO raid is already running. Use `.stopraid` first.")
+    active_tasks["bebo_raid"] = asyncio.create_task(bebo_raid_loop(event, chat_id, count))
     msg = await event.respond("🚀 **PREPARING TO RAID...**")
     await asyncio.sleep(0.3)
     await msg.edit("⚠️ **TARGET ACQUIRED & LOCKED...**")
     await asyncio.sleep(0.3)
-    await msg.edit(f"🔥 **SID RAID INITIATED: {count} TOXIC MESSAGES!**")
+    await msg.edit(f"🔥 **BEBO RAID INITIATED: {count} TOXIC MESSAGES!**")
 
-async def sid_raid_loop(event, chat_id, count):
+async def bebo_raid_loop(event, chat_id, count):
     try:
         for _ in range(count):
-            if "sid_raid" not in active_tasks:
+            if "bebo_raid" not in active_tasks:
                 break
             try:
                 text = random.choice(RAID_TEXTS)
                 await client.send_message(chat_id, text)
                 await asyncio.sleep(0.1)
             except Exception as e:
-                logger.error(f"SID raid error: {e}")
-        if "sid_raid" in active_tasks:
-            await client.send_message(chat_id, "✅ **SID RAID SUCCESSFULLY COMPLETED!**")
+                logger.error(f"BEBO raid error: {e}")
+        if "bebo_raid" in active_tasks:
+            await client.send_message(chat_id, "✅ **BEBO RAID SUCCESSFULLY COMPLETED!**")
     except asyncio.CancelledError:
         pass
     finally:
-        active_tasks.pop("sid_raid", None)
+        active_tasks.pop("bebo_raid", None)
 
 @command("stopraid")
 async def cmd_stopraid(event):
-    if "sid_raid" in active_tasks:
-        active_tasks["sid_raid"].cancel()
-        await event.reply("🛑 **SID RAID FORCE STOPPED!**")
+    if "bebo_raid" in active_tasks:
+        active_tasks["bebo_raid"].cancel()
+        await event.reply("🛑 **BEBO RAID FORCE STOPPED!**")
     else:
-        await event.reply("ℹ️ No active SID raid.")
+        await event.reply("ℹ️ No active BEBO raid.")
 
 # ------------------------- SPRAY COMMANDS (BEBO) -------------------------
 async def spray_loop(event, chat, text, count, delay):
@@ -1019,7 +1015,7 @@ async def cmd_stopspray(event):
     else:
         await event.reply("ℹ️ No active spray.")
 
-# ------------------------- ADVANCED SPAM (SID style) -------------------------
+# ------------------------- ADVANCED SPAM (BEBO style) -------------------------
 @command("advspam")
 async def advspam_cmd(event):
     args = event.text.strip().split(None, 2)
@@ -1334,13 +1330,13 @@ async def cmd_upload(event):
 async def cmd_menu(event):
     menu = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      💖  SID BEBO ULTIMATE  💖
+      💖  BEBO ULTIMATE  💖
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   📌 .menu      → This menu
   📌 .flowmenu  → Flow Bot menu
   📌 .advmenu   → Advanced Security & Tools Menu
-  📌 .about     → About SID BEBO
+  📌 .about     → About BEBO
   📌 .banner    → Show ASCII art
 
 【 🛠️ 𝗕𝗔𝗦𝗜𝗖 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
@@ -1354,7 +1350,7 @@ async def cmd_menu(event):
   😈 God    → .replygod @user| .sgod
   📌 Limited → .replybebo @user <text> <count> | .sstop
   ⚡ Super  → .superraid @user (all raids combined)
-  🔥 SID Raid → .raid <count> | .stopraid
+  🔥 BEBO Raid → .raid <count> | .stopraid
 
 【 💣 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 】
   ✦ .spam <mode> <text> (fast, medium, slow, burst, random, tsunami, nightmare)
@@ -1397,7 +1393,7 @@ async def cmd_menu(event):
   .upload (reply to a video/photo)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       💖  SID BEBO — 𝗔𝗹𝗹 𝗥𝗶𝗴𝗵𝘁𝘀 𝗥𝗲𝘀𝗲𝗿𝘃𝗲𝗱
+       💖  BEBO — 𝗔𝗹𝗹 𝗥𝗶𝗴𝗵𝘁𝘀 𝗥𝗲𝘀𝗲𝗿𝘃𝗲𝗱
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
     if video_file_id:
@@ -1412,7 +1408,7 @@ async def cmd_menu(event):
 async def cmd_advmenu(event):
     menu = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   🛡️  SID BEBO ADVANCED SECURITY & TOOLS  🛡️
+   🛡️  BEBO ADVANCED SECURITY & TOOLS  🛡️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 【 🗑️ 𝗠𝗨𝗧𝗘 𝗖𝗢𝗡𝗧𝗥𝗢𝗟𝗦 】
@@ -1452,27 +1448,27 @@ async def cmd_advmenu(event):
 async def cmd_flowmenu(event):
     menu = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      💖  SID BEBO FLOW BOT  💖
+      💖  BEBO FLOW BOT  💖
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   🌊 This is the high‑speed flow engine.
   Use `.swipe` to start a swipe flood.
 
 【 🌊 𝗙𝗟𝗢𝗪 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  ✦ .swipe <text>           → swipe with custom text
-  ✦ .swipe                  → swipe using default texts
-  ✦ .stopswipe              → stop swipe flood
+  ✦ .swipe <text>            → swipe with custom text
+  ✦ .swipe                   → swipe using default texts
+  ✦ .stopswipe               → stop swipe flood
 
 【 🚀 𝗙𝗟𝗢𝗪 𝗦𝗣𝗘𝗘𝗗 】
-  ✦ .flowdelay <seconds>    → set delay between messages
-  ✦ .flowcount <n>          → set number of messages per swipe
+  ✦ .flowdelay <seconds>     → set delay between messages
+  ✦ .flowcount <n>           → set number of messages per swipe
 
 【 💡 𝗧𝗜𝗣 】
-  Swipe uses the powerful text library from SID BEBO.
+  Swipe uses the powerful text library from BEBO.
   You can also add your own texts with `.addtext`.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       💖  SID BEBO — 𝗙𝗹𝗼𝘄 𝘄𝗶𝘁𝗵 𝗣𝗼𝘄𝗲𝗿
+       💖  BEBO — 𝗙𝗹𝗼𝘄 𝘄𝗶𝘁𝗵 𝗣𝗼𝘄𝗲𝗿
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
     if video_file_id:
@@ -1571,10 +1567,10 @@ async def swipe_loop(event, chat, text):
 # ------------------------- ANIMATION & BEAUTIFICATION -------------------------
 @command("start")
 async def cmd_start(event):
-    msg = await event.reply("⏳ **Starting SID BEBO...**")
+    msg = await event.reply("⏳ **Starting BEBO...**")
     for i in range(1, 11):
         bar = "█" * i + "░" * (10 - i)
-        await msg.edit(f"⏳ **Loading SID BEBO**  [{bar}] {i*10}%")
+        await msg.edit(f"⏳ **Loading BEBO**  [{bar}] {i*10}%")
         await asyncio.sleep(0.3)
     await asyncio.sleep(0.3)
     await cmd_menu(event)
@@ -1585,12 +1581,12 @@ async def cmd_welcome(event):
     welcome_msg = f"""
 ╔══════════════════════════════════════════╗
 ║                                          ║
-║   ✨  𝐖𝐄𝐋𝐂𝐎𝐌𝐄  𝐓𝐎  𝐒𝐈𝐃 𝐁𝐄𝐁𝐎  ✨     ║
+║   ✨  𝐖𝐄𝐋𝐂𝐎𝐌𝐄  𝐓𝐎  𝐁𝐄𝐁𝐎  ✨     ║
 ║                                          ║
 ║   💖  The most powerful userbot          ║
 ║   ⚡  Fast, reliable, and stylish        ║
 ║                                          ║
-║   🛠️  Use `.menu` to explore            ║
+║   🛠️  Use `.menu` to explore             ║
 ║   🌊  Use `.flowmenu` for Flow mode      ║
 ║                                          ║
 ║   🎀  Made with ❤️ for the community    ║
@@ -1605,16 +1601,16 @@ async def cmd_welcome(event):
 async def cmd_about(event):
     about = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      💖  𝐀𝐁𝐎𝐔𝐓  𝐒𝐈𝐃 𝐁𝐄𝐁𝐎  💖
+      💖  𝐀𝐁𝐎𝐔𝐓  𝐁𝐄𝐁𝐎  💖
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   🔹 **Version** : 4.0 (Ultimate Dynamic Edition)
-  🔹 **Author**  : SID BEBO Team
+  🔹 **Author**  : BEBO Team
   🔹 **License** : All Rights Reserved
   🔹 **Language** : Python (Telethon)
 
   🌟 **Features** :
-  • Merged SID & BEBO engines
+  • Merged BEBO & BEBO engines
   • Advanced Security & Defense protocols
   • Ultra‑fast raid & spam (Tsunami, Blitz)
   • Intelligent Auto-Delete & Smart Mute
@@ -1624,7 +1620,7 @@ async def cmd_about(event):
   • Cloud dummy server
 
   💡 **Credits** : Powered by Telethon
-  🛡️ **SID BEBO** — Built with ❤️.
+  🛡️ **BEBO** — Built with ❤️.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
     await event.reply(about)
@@ -1636,13 +1632,13 @@ BANNER = r"""
   ╔═╗╔╗╔╔═╗╦ ╦╔═╗
   ╠═╣║║║║ ╦║ ║║╣
   ╩ ╩╝╚╝╚═╝╚═╝╚═╝
-         💖 𝐒𝐈𝐃 𝐁𝐄𝐁𝐎 💖
+         💖 𝐁𝐄𝐁𝐎 💖
 """
 @command("banner")
 async def cmd_banner(event):
     await event.reply(f"`{BANNER}`")
 
-# ------------------------- UTILITIES (SID style) -------------------------
+# ------------------------- UTILITIES (BEBO style) -------------------------
 @command("sabchup")
 async def sabchup_cmd(event):
     chat_id = event.chat_id
@@ -1816,7 +1812,7 @@ async def stopadvmultireply_cmd(event):
             return await event.respond("✅ **MULTI-REPLY OFF**")
     await event.respond("❌ **Multi-reply is not active**")
 
-# Reply raid (from SID)
+# Reply raid (from BEBO)
 @command("replyraid")
 async def reply_raid_cmd(event):
     chat_id = event.chat_id
@@ -1869,7 +1865,7 @@ async def stop_reply_raid_cmd(event):
 
 # Alias for .rr and .srr already defined, but .replyraid and .stopreplyraid now added.
 
-# Name change (from SID)
+# Name change (from BEBO)
 @command("namechange")
 async def namechange_cmd(event):
     args = event.text.strip().split()
@@ -1918,11 +1914,11 @@ async def namechange_cmd(event):
                 elif mode == 'emoji':
                     new_name = f"{''.join([random.choice(RANDOM_EMOJIS) for _ in range(5)])} {original_title} {''.join([random.choice(COUNTRY_EMOJIS) for _ in range(3)])}"
                 elif mode == 'owns':
-                    new_name = f"👑 SID OWNS {random.choice(RANDOM_EMOJIS)} {original_title} {random.choice(COUNTRY_EMOJIS)}"
+                    new_name = f"👑 BEBO OWNS {random.choice(RANDOM_EMOJIS)} {original_title} {random.choice(COUNTRY_EMOJIS)}"
                 elif mode == 'enters':
-                    new_name = f"🚪 SID ENTERS {random.choice(RANDOM_EMOJIS)} {original_title} 🔥"
+                    new_name = f"🚪 BEBO ENTERS {random.choice(RANDOM_EMOJIS)} {original_title} 🔥"
                 elif mode == 'dad':
-                    new_name = f"👨 SID YOUR DAD {random.choice(RANDOM_EMOJIS)} {original_title} 💀"
+                    new_name = f"👨 BEBO YOUR DAD {random.choice(RANDOM_EMOJIS)} {original_title} 💀"
                 else:
                     new_name = f"{random.choice(RANDOM_EMOJIS)} {original_title} {random.choice(COUNTRY_EMOJIS)} #{counter}"
 
@@ -1973,7 +1969,7 @@ async def blitz_cmd(event):
     is_channel = hasattr(chat, 'megagroup') or hasattr(chat, 'broadcast')
     msg = await event.respond("⚡ **WARMING UP BLITZ...**")
     await asyncio.sleep(0.3)
-    status_msg = await msg.edit(f"⚡ **SID BEBO BLITZ MODE**\n🎯 100K changes\n💀 3s flood waits")
+    status_msg = await msg.edit(f"⚡ **BEBO BLITZ MODE**\n🎯 100K changes\n💀 3s flood waits")
 
     async def blitz_task():
         counter = 0
@@ -1990,7 +1986,7 @@ async def blitz_cmd(event):
                 if counter % 1000 == 0:
                     elapsed = time.time() - start_time
                     try:
-                        await status_msg.edit(f"⚡ **SID BEBO BLITZ**\n📊 {counter:,}/100K\n⚡ {counter / max(1, elapsed):.1f}/s\n💀 Floods: {flood_waits}")
+                        await status_msg.edit(f"⚡ **BEBO BLITZ**\n📊 {counter:,}/100K\n⚡ {counter / max(1, elapsed):.1f}/s\n💀 Floods: {flood_waits}")
                     except:
                         pass
             except Exception as e:
@@ -1998,7 +1994,7 @@ async def blitz_cmd(event):
                     flood_waits += 1
                     await asyncio.sleep(3)
                 continue
-        await status_msg.edit(f"✅ **SID BEBO BLITZ COMPLETE!**\n📊 {counter:,}\n⏱️ {time.time() - start_time:.1f}s\n🔥 DONE!")
+        await status_msg.edit(f"✅ **BEBO BLITZ COMPLETE!**\n📊 {counter:,}\n⏱️ {time.time() - start_time:.1f}s\n🔥 DONE!")
 
     asyncio.create_task(blitz_task())
 
@@ -2008,29 +2004,29 @@ async def lockname_cmd(event):
     chat = await event.get_chat()
     state.locked_titles[event.chat_id] = chat.title
     state.save_state()
-    await event.respond(f"🔒 **NAME LOCKED BY SID BEBO:** {chat.title}")
+    await event.respond(f"🔒 **NAME LOCKED BY BEBO:** {chat.title}")
 
 @command("lockgroup")
 async def lockgroup_cmd(event):
     state.locked_groups.add(event.chat_id)
-    await event.respond("🔐 **GROUP LOCKED BY SID BEBO**")
+    await event.respond("🔐 **GROUP LOCKED BY BEBO**")
 
 @command("unlockgroup")
 async def unlockgroup_cmd(event):
     if event.chat_id in state.locked_groups:
         state.locked_groups.remove(event.chat_id)
-    await event.respond("🔓 **UNLOCKED BY SID BEBO**")
+    await event.respond("🔓 **UNLOCKED BY BEBO**")
 
 @command("lockchat")
 async def lockchat_cmd(event):
     state.locked_chat.add(event.chat_id)
-    await event.respond("💬 **CHAT LOCKED BY SID BEBO**")
+    await event.respond("💬 **CHAT LOCKED BY BEBO**")
 
 @command("unlockchat")
 async def unlockchat_cmd(event):
     if event.chat_id in state.locked_chat:
         state.locked_chat.remove(event.chat_id)
-    await event.respond("💬 **CHAT UNLOCKED BY SID BEBO**")
+    await event.respond("💬 **CHAT UNLOCKED BY BEBO**")
 
 @command("locknamechange")
 async def locknamechange_cmd(event):
@@ -2039,13 +2035,13 @@ async def locknamechange_cmd(event):
     state.locked_name_change.add(chat_id)
     state.locked_titles[chat_id] = chat.title
     state.save_state()
-    await event.respond(f"🔒 **NAME CHANGE LOCKED BY SID BEBO**")
+    await event.respond(f"🔒 **NAME CHANGE LOCKED BY BEBO**")
 
 @command("unlocknamechange")
 async def unlocknamechange_cmd(event):
     if event.chat_id in state.locked_name_change:
         state.locked_name_change.remove(event.chat_id)
-    await event.respond("🔓 **NAME CHANGE UNLOCKED BY SID BEBO**")
+    await event.respond("🔓 **NAME CHANGE UNLOCKED BY BEBO**")
 
 # Terminate, killname, dominate, emergency
 @command("terminate")
@@ -2054,7 +2050,7 @@ async def terminate_cmd(event):
     chat_id = event.chat_id
     stop_commands = ['.stopadvspam', '.stopspray', '.stopraid', '.stop', '.stopall', '.stopdel',
                      '.stopswipe', '.cancel', '.end', '.halt', '.off', '.disable', '.stopflood', '.stopnamechange']
-    status_msg = await event.respond("🛑 **SID BEBO TERMINATING PROCESSES...**")
+    status_msg = await event.respond("🛑 **BEBO TERMINATING PROCESSES...**")
     sent = 0
     for cmd in stop_commands:
         try:
@@ -2064,7 +2060,7 @@ async def terminate_cmd(event):
             sent += 1
         except:
             pass
-    await status_msg.edit(f"✅ **SID BEBO SENT {sent} COMMANDS**")
+    await status_msg.edit(f"✅ **BEBO SENT {sent} COMMANDS**")
     await asyncio.sleep(2)
     await status_msg.delete()
 
@@ -2080,7 +2076,7 @@ async def killname_cmd(event):
             original_name = chat.title.split()[0]
         except:
             original_name = "Group"
-    status_msg = await event.respond("💀 **SID BEBO IS KILLING NAME CHANGERS...**")
+    status_msg = await event.respond("💀 **BEBO IS KILLING NAME CHANGERS...**")
     for cmd in ['.stopnamechange', '.stopname', '.stopnm', '.stop']:
         try:
             msg = await client.send_message(chat_id, cmd)
@@ -2100,7 +2096,7 @@ async def killname_cmd(event):
                 await asyncio.sleep(0.2)
             except:
                 pass
-        await status_msg.edit(f"✅ **SID BEBO TERMINATED THE PROCESS!**\n📝 {original_name}")
+        await status_msg.edit(f"✅ **BEBO TERMINATED THE PROCESS!**\n📝 {original_name}")
     except:
         await status_msg.edit("⚠️ **Sent commands**")
     await asyncio.sleep(2)
@@ -2116,7 +2112,7 @@ async def dominate_cmd(event):
     state.adv_spam_active[chat_id] = 'DOMINATE_MODE_ACTIVE'
     msg = await event.respond("🔌 **POWERING UP DOMINATION...**")
     await asyncio.sleep(0.3)
-    await msg.edit("👑 **SID BEBO DOMINATION ON**\n💀 Blocking all enemy bots!")
+    await msg.edit("👑 **BEBO DOMINATION ON**\n💀 Blocking all enemy bots!")
     async def dominate_task():
         while chat_id in state.adv_spam_active and state.adv_spam_active[chat_id] == 'DOMINATE_MODE_ACTIVE':
             try:
@@ -2135,7 +2131,7 @@ async def stopdominate_cmd(event):
     chat_id = event.chat_id
     if chat_id in state.adv_spam_active and 'DOMINATE' in str(state.adv_spam_active.get(chat_id, '')):
         del state.adv_spam_active[chat_id]
-        await event.respond("✅ **SID BEBO DOMINATION STOPPED**")
+        await event.respond("✅ **BEBO DOMINATION STOPPED**")
 
 @command("emergency")
 async def emergency_cmd(event):
@@ -2145,7 +2141,7 @@ async def emergency_cmd(event):
     state.emergency_active[chat_id] = True
     msg = await event.respond("⚠️ **WARNING: ENGAGING OVERDRIVE...**")
     await asyncio.sleep(0.3)
-    await msg.edit("🚨 **SID BEBO EMERGENCY MODE** 🚨\n\n💀 **MAXIMUM OVERDRIVE!**\n⚡ 1000 changes/sec\n💥 1000 msgs/sec\n🔁 100x replies\n\n⚠️ **OVERWHELMING SPEED!**")
+    await msg.edit("🚨 **BEBO EMERGENCY MODE** 🚨\n\n💀 **MAXIMUM OVERDRIVE!**\n⚡ 1000 changes/sec\n💥 1000 msgs/sec\n🔁 100x replies\n\n⚠️ **OVERWHELMING SPEED!**")
 
     async def emergency_namechange():
         try:
@@ -2157,7 +2153,7 @@ async def emergency_cmd(event):
             counter = 0
             while chat_id in state.emergency_active and state.emergency_active[chat_id]:
                 try:
-                    new_name = f"{random.choice(RANDOM_EMOJIS)}💀SID BEBO EMERGENCY💀 {original_title} #{counter}"
+                    new_name = f"{random.choice(RANDOM_EMOJIS)}💀BEBO EMERGENCY💀 {original_title} #{counter}"
                     if is_channel:
                         await client(EditTitleRequest(channel=chat_id, title=new_name))
                     else:
@@ -2172,12 +2168,12 @@ async def emergency_cmd(event):
     async def emergency_spam():
         while chat_id in state.emergency_active and state.emergency_active[chat_id]:
             try:
-                await client.send_message(chat_id, "🚨 SID BEBO EMERGENCY 🚨")
+                await client.send_message(chat_id, "🚨 BEBO EMERGENCY 🚨")
                 await asyncio.sleep(0.001)
             except:
                 await asyncio.sleep(0.001)
 
-    state.autoswipe_active[chat_id] = "MULTI:100:🚨 SID BEBO EMERGENCY 🚨"
+    state.autoswipe_active[chat_id] = "MULTI:100:🚨 BEBO EMERGENCY 🚨"
     asyncio.create_task(emergency_namechange())
     asyncio.create_task(emergency_spam())
 
@@ -2188,7 +2184,7 @@ async def stopemergency_cmd(event):
         state.emergency_active[chat_id] = False
         if chat_id in state.autoswipe_active:
             del state.autoswipe_active[chat_id]
-        await event.respond("✅ **SID BEBO EMERGENCY STOPPED**")
+        await event.respond("✅ **BEBO EMERGENCY STOPPED**")
 
 @command("makegc")
 async def makegc_cmd(event):
@@ -2200,7 +2196,7 @@ async def makegc_cmd(event):
         msg = await event.respond(f"🛠️ **CREATING CHAT...**")
         await asyncio.sleep(0.3)
         await client(CreateChatRequest(users=[OWNER_ID], title=title))
-        await msg.edit(f"✅ **SID BEBO Created Chat:** {title}")
+        await msg.edit(f"✅ **BEBO Created Chat:** {title}")
     except Exception as e:
         await event.respond(f"❌ {str(e)[:50]}")
 
@@ -2216,7 +2212,7 @@ async def lockswipe_cmd(event):
         ent = await client.get_entity(username)
         state.swipe_targets.setdefault(event.chat_id, {})[ent.id] = text
         state.save_state()
-        await event.respond(f"🔒 **LOCKED SWIPE BY SID BEBO:** @{username}")
+        await event.respond(f"🔒 **LOCKED SWIPE BY BEBO:** @{username}")
     except:
         await event.respond("❌ **Failed**")
 
@@ -2548,7 +2544,7 @@ dares = [
     "Swap your profile picture with a meme for an hour.",
     "Write a poem about the person who sent this command.",
     "Do a handstand for 10 seconds.",
-    "Send a voice message saying 'I love SID BEBO'.",
+    "Send a voice message saying 'I love BEBO'.",
 ]
 @command("dare")
 async def cmd_dare(event):
@@ -2599,14 +2595,14 @@ async def main():
     await client.start()
     client.start_time = time.time()
     me = await client.get_me()
-    logger.info(f"SID BEBO Ultimate started as {me.first_name} (ID: {me.id})")
+    logger.info(f"BEBO Ultimate started as {me.first_name} (ID: {me.id})")
     logger.info(f"Owner ID: {OWNER_ID}")
 
     start_dummy_server()
 
     if bot_on:
         try:
-            await client.send_message(OWNER_ID, f"💖 **SID BEBO Ultimate** started.\nUse `.menu` for commands.\n{BANNER}")
+            await client.send_message(OWNER_ID, f"💖 **BEBO Ultimate** started.\nUse `.menu` for commands.\n{BANNER}")
         except Exception:
             logger.warning("Could not notify owner at startup.")
 
@@ -2616,7 +2612,7 @@ if __name__ == "__main__":
     try:
         client.loop.run_until_complete(main())
     except KeyboardInterrupt:
-        logger.info("SID BEBO stopped by user.")
+        logger.info("BEBO stopped by user.")
         save_bot_state()
         save_flow_state()
         save_saved_texts()
