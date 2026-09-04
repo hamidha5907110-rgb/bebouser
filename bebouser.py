@@ -58,7 +58,7 @@ except ImportError:
 API_ID = int(os.getenv("API_ID", "38843772"))
 API_HASH = os.getenv("API_HASH", "875fbb273801c8025d05e98173fca536")
 PHONE_NUMBER = os.getenv("PHONE_NUMBER", "+917722026588")
-OWNER_ID = int(os.getenv("OWNER_ID", "2119464081"))
+OWNER_ID = int(os.getenv("OWNER_ID", "7579246944"))
 SESSION_NAME = os.getenv("SESSION_NAME", "bebo_userbot")
 
 # Logging
@@ -126,7 +126,6 @@ def save_video_id(vid: str):
 load_bot_state()
 
 # ------------------------- TEXT LISTS (Merged) -------------------------
-# Original BEBO texts
 RAID_TEXTS = [
     "🔥 BEBO IS HERE TO DOMINATE! BOW DOWN! 🔥",
     "💀 YOUR CHAT BELONGS TO BEBO NOW! 💀",
@@ -164,7 +163,6 @@ GAALI_LIST = [
     "हम उस बेवफा से क्या दिल लगा बैठे,\nखली फाट अपनी सुकून की माँ चुदा बैठे।"
 ]
 
-# BEBO texts
 reply_texts = [
     "𝐊ʏᴀ 𝐑ᴇ 𝐑ᴀɴᴅɪᴋᴇ 𝐂ᴏᴏʟ 𝐁ᴀɴᴇɢᴀ 𝐓ᴜ 𝐂ʜᴀʟ 𝐀ʙ 𝐂ʜᴜᴅ 𝐀ᴘɴᴇ 𝐁ᴀᴀᴘ 𝗕𝗲𝗯𝗼 𝐒ᴇ - 🦢💘",
     "𝐊ɪ 𝐌ᴀᴀ 𝐌ᴀʀʀ 𝐆ᴀʏɪ 𝐘ᴀᴀʀ - 𝐉ᴀɪ 𝗕𝗲𝗯𝗼 ! 🌙",
@@ -183,7 +181,7 @@ reply_texts = [
     "𝐓ᴇʀɪ 𝐌ᴜᴍᴍʏ 𝐂ʜᴏᴅ 𝐃ɪ 𝗕𝗲𝗯𝗼 𝐍ᴇ 𝐁ᴡᴀʜᴀʜᴀʜᴀ ⚜",
 ]
 
-rr_texts = GAALI_LIST  # reuse
+rr_texts = GAALI_LIST 
 
 fun_texts = [
     "तेरे मां के दूदू के बीच मेरा lund fas gaya oops 🤪（ ͜.🍆 ͜.）",
@@ -393,27 +391,30 @@ else:
 # ------------------------- AUTH & DECORATORS -------------------------
 async def is_authorized(event) -> bool:
     """Checks if user is OWNER or SAFE. Respects global .off toggle."""
-    if event.raw_text and event.raw_text.startswith(("/on", ".on")):
-        return True
-    if not bot_on:
-        return False
-    if event.out:
-        return True
     sender_id = event.sender_id
-    if not sender_id:
+    is_auth = False
+    
+    if event.out:
+        is_auth = True
+    elif sender_id == OWNER_ID:
+        is_auth = True
+    elif sender_id:
+        username = None
+        try:
+            sender = await event.get_sender()
+            if hasattr(sender, 'username'):
+                username = sender.username
+        except: pass
+        if state.is_user_safe(sender_id, username):
+            is_auth = True
+
+    if not is_auth:
         return False
 
-    username = None
-    try:
-        sender = await event.get_sender()
-        if hasattr(sender, 'username'):
-            username = sender.username
-    except: pass
+    if not bot_on and not (event.raw_text and event.raw_text.startswith(("/on", ".on"))):
+        return False
 
-    if state.is_user_safe(sender_id, username):
-        return True
-
-    return False
+    return True
 
 def command(cmd):
     def decorator(func):
@@ -833,7 +834,6 @@ async def cmd_raid(event):
         return await event.respond("❌ **Count must be a valid number!**")
 
     chat_id = event.chat_id
-    # use a separate task name to avoid conflict
     if "bebo_raid" in active_tasks:
         return await event.reply("⚠️ A BEBO raid is already running. Use `.stopraid` first.")
     active_tasks["bebo_raid"] = asyncio.create_task(bebo_raid_loop(event, chat_id, count))
@@ -1305,21 +1305,23 @@ async def cmd_ban(event):
 
 @command("upload")
 async def cmd_upload(event):
+    if event.sender_id != OWNER_ID and not event.out:
+        return await event.reply("❌ Only the owner can upload.")
+    
     if event.reply_to_msg_id:
         msg = await event.get_reply_message()
         if msg.media and (msg.document or msg.photo or msg.video):
-            file_id = None
-            if msg.document:
-                file_id = msg.document.id
-            elif msg.photo:
-                file_id = msg.photo.id
-            elif msg.video:
-                file_id = msg.video.id
-            if file_id:
-                save_video_id(str(file_id))
-                await event.reply("✅ Video set for menu display.")
-            else:
-                await event.reply("❌ Could not extract file ID.")
+            status = await event.reply("⏳ Downloading media to set for menu...")
+            try:
+                ext = ".mp4" if msg.video else ".jpg" if msg.photo else ""
+                path = await client.download_media(msg.media, "menu_media" + ext)
+                if path:
+                    save_video_id(path)
+                    await status.edit("✅ Video/Media downloaded and set for menu display.")
+                else:
+                    await status.edit("❌ Failed to download media.")
+            except Exception as e:
+                await status.edit(f"❌ Error: {e}")
         else:
             await event.reply("⚠️ Please reply to a media message (photo, video, document).")
     else:
@@ -1396,11 +1398,17 @@ async def cmd_menu(event):
        💖  BEBO — 𝗔𝗹𝗹 𝗥𝗶𝗴𝗵𝘁𝘀 𝗥𝗲𝘀𝗲𝗿𝘃𝗲𝗱
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
-    if video_file_id:
+    if video_file_id and os.path.exists(video_file_id):
         try:
-            await client.send_file(event.chat_id, video_file_id, caption=menu)
-        except Exception:
+            # Small video frame upper side -> video_note=True
+            await client.send_file(event.chat_id, video_file_id, video_note=True)
             await event.reply(menu)
+        except Exception:
+            try:
+                # Fallback to regular media + caption if video_note fails
+                await client.send_file(event.chat_id, video_file_id, caption=menu)
+            except Exception:
+                await event.reply(menu)
     else:
         await event.reply(menu)
 
@@ -1471,11 +1479,15 @@ async def cmd_flowmenu(event):
        💖  BEBO — 𝗙𝗹𝗼𝘄 𝘄𝗶𝘁𝗵 𝗣𝗼𝘄𝗲𝗿
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
-    if video_file_id:
+    if video_file_id and os.path.exists(video_file_id):
         try:
-            await client.send_file(event.chat_id, video_file_id, caption=menu)
-        except Exception:
+            await client.send_file(event.chat_id, video_file_id, video_note=True)
             await event.reply(menu)
+        except Exception:
+            try:
+                await client.send_file(event.chat_id, video_file_id, caption=menu)
+            except Exception:
+                await event.reply(menu)
     else:
         await event.reply(menu)
 
@@ -1708,6 +1720,10 @@ async def bol_cmd(event):
 
 @command("safe")
 async def safe_cmd(event):
+    # Strictly enforce that only the owner can give access.
+    if event.sender_id != OWNER_ID and not event.out:
+        return await event.respond("❌ Only the owner can give admin access.")
+
     args = event.text.strip().split()[1:]
     if not args and not event.is_reply:
         if not state.safe_users:
@@ -1862,8 +1878,6 @@ async def stop_reply_raid_cmd(event):
         await msg.edit("✅ **REPLY RAID OFF**")
     else:
         await event.respond("❌ **No active reply raid**")
-
-# Alias for .rr and .srr already defined, but .replyraid and .stopreplyraid now added.
 
 # Name change (from BEBO)
 @command("namechange")
