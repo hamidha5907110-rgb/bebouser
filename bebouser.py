@@ -2,7 +2,7 @@
 """
 BEBO ULTIMATE – DYNAMIC USERBOT
 Merges BEBO's core with BEBO's advanced raid/spam engine, flow mode,
-video menu, security locks, and cloud hosting dummy server.
+security locks, and cloud hosting dummy server.
 All rights reserved.
 """
 
@@ -58,7 +58,7 @@ except ImportError:
 API_ID = int(os.getenv("API_ID", "38843772"))
 API_HASH = os.getenv("API_HASH", "875fbb273801c8025d05e98173fca536")
 PHONE_NUMBER = os.getenv("PHONE_NUMBER", "+917722026588")
-OWNER_ID = int(os.getenv("OWNER_ID", "7579246944"))
+OWNER_ID = int(os.getenv("OWNER_ID", "2119464081"))
 SESSION_NAME = os.getenv("SESSION_NAME", "bebo_userbot")
 
 # Logging
@@ -87,19 +87,17 @@ def start_dummy_server():
 BOT_STATE_FILE = "bot_state.txt"
 FLOW_STATE_FILE = "flow_state.txt"
 TEXTS_FILE = "saved_texts.txt"
-VIDEO_FILE = "video_id.txt"
 
 bot_on = True
 flow_mode = False
 saved_texts: List[str] = []
-video_file_id: Optional[str] = None
 spray_delay = 0.5
 auto_reply_on = False
 warnings: Dict[int, int] = {}
 active_tasks: Dict[str, asyncio.Task] = {}
 
 def load_bot_state():
-    global bot_on, flow_mode, video_file_id, saved_texts
+    global bot_on, flow_mode, saved_texts
     try:
         if Path(BOT_STATE_FILE).exists():
             with open(BOT_STATE_FILE, "r") as f: bot_on = f.read().strip().lower() == "on"
@@ -107,8 +105,6 @@ def load_bot_state():
             with open(FLOW_STATE_FILE, "r") as f: flow_mode = f.read().strip().lower() == "on"
         if Path(TEXTS_FILE).exists():
             with open(TEXTS_FILE, "r", encoding="utf-8") as f: saved_texts = [line.strip() for line in f if line.strip()]
-        if Path(VIDEO_FILE).exists():
-            with open(VIDEO_FILE, "r") as f: video_file_id = f.read().strip()
     except Exception as e:
         logger.error(f"Error loading files: {e}")
 
@@ -118,14 +114,11 @@ def save_flow_state():
     with open(FLOW_STATE_FILE, "w") as f: f.write("on" if flow_mode else "off")
 def save_saved_texts():
     with open(TEXTS_FILE, "w", encoding="utf-8") as f: f.write("\n".join(saved_texts))
-def save_video_id(vid: str):
-    global video_file_id
-    video_file_id = vid
-    with open(VIDEO_FILE, "w") as f: f.write(vid)
 
 load_bot_state()
 
 # ------------------------- TEXT LISTS (Merged) -------------------------
+# Original BEBO texts
 RAID_TEXTS = [
     "🔥 BEBO IS HERE TO DOMINATE! BOW DOWN! 🔥",
     "💀 YOUR CHAT BELONGS TO BEBO NOW! 💀",
@@ -163,6 +156,7 @@ GAALI_LIST = [
     "हम उस बेवफा से क्या दिल लगा बैठे,\nखली फाट अपनी सुकून की माँ चुदा बैठे।"
 ]
 
+# BEBO texts
 reply_texts = [
     "𝐊ʏᴀ 𝐑ᴇ 𝐑ᴀɴᴅɪᴋᴇ 𝐂ᴏᴏʟ 𝐁ᴀɴᴇɢᴀ 𝐓ᴜ 𝐂ʜᴀʟ 𝐀ʙ 𝐂ʜᴜᴅ 𝐀ᴘɴᴇ 𝐁ᴀᴀᴘ 𝗕𝗲𝗯𝗼 𝐒ᴇ - 🦢💘",
     "𝐊ɪ 𝐌ᴀᴀ 𝐌ᴀʀʀ 𝐆ᴀʏɪ 𝐘ᴀᴀʀ - 𝐉ᴀɪ 𝗕𝗲𝗯𝗼 ! 🌙",
@@ -181,7 +175,7 @@ reply_texts = [
     "𝐓ᴇʀɪ 𝐌ᴜᴍᴍʏ 𝐂ʜᴏᴅ 𝐃ɪ 𝗕𝗲𝗯𝗼 𝐍ᴇ 𝐁ᴡᴀʜᴀʜᴀʜᴀ ⚜",
 ]
 
-rr_texts = GAALI_LIST 
+rr_texts = GAALI_LIST  # reuse
 
 fun_texts = [
     "तेरे मां के दूदू के बीच मेरा lund fas gaya oops 🤪（ ͜.🍆 ͜.）",
@@ -246,10 +240,11 @@ roast_list = [
 all_texts = reply_texts + rr_texts + fun_texts + flag_texts + heart_replies + attack_list + roast_list
 
 # ------------------------- ADVANCED STATE (BEBO COMPATIBLE) -------------------------
+# Use the same file names as bebokaauser.py for compatibility
 SAFE_USERS_FILE = "safe_users.json"
 AUTO_DELETE_FILE = "auto_delete.json"
 DELETE_USERS_FILE = "delete_users.json"
-ADV_STATE_FILE = "bebo_state.json"
+ADV_STATE_FILE = "bebo_state.json"   # changed from adv_state.json to match first script
 
 COUNTRY_EMOJIS = ["🇮🇳", "🇺🇸", "🇬🇧", "🇨🇦", "🇦🇺", "🇩🇪", "🇫🇷", "🇯🇵", "🇰🇷", "🇨🇳", "🇷🇺", "🇧🇷", "🇮🇹", "🇪🇸", "🇵🇰", "🇧🇩", "🇳🇵", "🇱🇰", "🇦🇪", "🇸🇦"]
 RANDOM_EMOJIS = ["🔥", "⚡", "✨", "🌟", "⭐", "💫", "🌙", "☀️", "❤️", "🧡", "💛", "💚", "💙", "💜", "😀", "😃", "😄", "😁", "👍", "👎"]
@@ -276,6 +271,7 @@ class BotState:
         self.adv_spam_active: Dict[int, str] = {}
         self.namechange_active: Dict[int, bool] = {}
         self.reply_raid_active: Dict[int, Dict[int, Dict]] = {}
+        self.blitz_active: Dict[int, bool] = {}
 
         self.locked_titles: Dict[int, str] = {}
         self.swipe_targets: Dict[int, Dict[int, str]] = {}
@@ -288,7 +284,7 @@ class BotState:
         self.emergency_active: Dict[int, bool] = {}
 
         self.metrics = {"start": time.monotonic(), "msg": 0, "mutes": 0, "swipes": 0}
-        self.namechange_delays: Dict[int, float] = {}
+        self.namechange_delays: Dict[int, float] = {}   # for dynamic delay
 
         self.load_data()
 
@@ -391,30 +387,30 @@ else:
 # ------------------------- AUTH & DECORATORS -------------------------
 async def is_authorized(event) -> bool:
     """Checks if user is OWNER or SAFE. Respects global .off toggle."""
-    sender_id = event.sender_id
-    is_auth = False
-    
+    if event.raw_text and event.raw_text.startswith(("/on", ".on")):
+        return True
+    if not bot_on:
+        return False
     if event.out:
-        is_auth = True
-    elif sender_id == OWNER_ID:
-        is_auth = True
-    elif sender_id:
-        username = None
-        try:
-            sender = await event.get_sender()
-            if hasattr(sender, 'username'):
-                username = sender.username
-        except: pass
-        if state.is_user_safe(sender_id, username):
-            is_auth = True
-
-    if not is_auth:
+        return True
+    sender_id = event.sender_id
+    if not sender_id:
         return False
 
-    if not bot_on and not (event.raw_text and event.raw_text.startswith(("/on", ".on"))):
-        return False
+    username = None
+    try:
+        sender = await event.get_sender()
+        if hasattr(sender, 'username'):
+            username = sender.username
+    except: pass
 
-    return True
+    if state.is_user_safe(sender_id, username):
+        return True
+
+    try:
+        await event.reply("bebo ko baap bana ke aa randyke!! 🖕💩")
+    except: pass
+    return False
 
 def command(cmd):
     def decorator(func):
@@ -834,6 +830,7 @@ async def cmd_raid(event):
         return await event.respond("❌ **Count must be a valid number!**")
 
     chat_id = event.chat_id
+    # use a separate task name to avoid conflict
     if "bebo_raid" in active_tasks:
         return await event.reply("⚠️ A BEBO raid is already running. Use `.stopraid` first.")
     active_tasks["bebo_raid"] = asyncio.create_task(bebo_raid_loop(event, chat_id, count))
@@ -1303,30 +1300,6 @@ async def cmd_ban(event):
     except Exception as e:
         await event.reply(f"❌ Failed to ban: {e}")
 
-@command("upload")
-async def cmd_upload(event):
-    if event.sender_id != OWNER_ID and not event.out:
-        return await event.reply("❌ Only the owner can upload.")
-    
-    if event.reply_to_msg_id:
-        msg = await event.get_reply_message()
-        if msg.media and (msg.document or msg.photo or msg.video):
-            status = await event.reply("⏳ Downloading media to set for menu...")
-            try:
-                ext = ".mp4" if msg.video else ".jpg" if msg.photo else ""
-                path = await client.download_media(msg.media, "menu_media" + ext)
-                if path:
-                    save_video_id(path)
-                    await status.edit("✅ Video/Media downloaded and set for menu display.")
-                else:
-                    await status.edit("❌ Failed to download media.")
-            except Exception as e:
-                await status.edit(f"❌ Error: {e}")
-        else:
-            await event.reply("⚠️ Please reply to a media message (photo, video, document).")
-    else:
-        await event.reply("⚠️ Reply to a media message with `.upload`.")
-
 # ------------------------- MENU COMMANDS -------------------------
 @command("menu")
 async def cmd_menu(event):
@@ -1351,7 +1324,7 @@ async def cmd_menu(event):
   💗 Heart  → .hrr @user     | .shrr
   😈 God    → .replygod @user| .sgod
   📌 Limited → .replybebo @user <text> <count> | .sstop
-  ⚡ Super  → .superraid @user (all raids combined)
+  ⚡ Super  → .superraid @user | .stopsuper
   🔥 BEBO Raid → .raid <count> | .stopraid
 
 【 💣 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 】
@@ -1391,21 +1364,11 @@ async def cmd_menu(event):
 【 🎭 𝗙𝗨𝗡 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
   .motivate, .truth, .dare, .shayari, .joke, .quote
 
-【 🎬 𝗩𝗜𝗗𝗘𝗢 𝗨𝗣𝗟𝗢𝗔𝗗 】
-  .upload (reply to a video/photo)
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
        💖  BEBO — 𝗔𝗹𝗹 𝗥𝗶𝗴𝗵𝘁𝘀 𝗥𝗲𝘀𝗲𝗿𝘃𝗲𝗱
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
-    if video_file_id and os.path.exists(video_file_id):
-        try:
-            # Send as standard media (video/photo) with the menu as the integrated caption
-            await client.send_file(event.chat_id, video_file_id, caption=menu)
-        except Exception:
-            await event.reply(menu)
-    else:
-        await event.reply(menu)
+    await event.reply(menu)
 
 @command("advmenu")
 async def cmd_advmenu(event):
@@ -1429,7 +1392,7 @@ async def cmd_advmenu(event):
 【 🔄 𝗡𝗔𝗠𝗘 𝗖𝗢𝗡𝗧𝗥𝗢𝗟𝗦 】
   • .namechange [mode] [ms] (normal, time, emoji, owns, enters, dad)
   • .namedelay <ms> | .stopnamechange
-  • .blitz [mode]
+  • .blitz [mode] | .stopblitz
 
 【 🔐 𝗦𝗘𝗖𝗨𝗥𝗜𝗧𝗬 𝗟𝗢𝗖𝗞𝗦 】
   • .lockname | .lockgroup | .unlockgroup
@@ -1458,13 +1421,13 @@ async def cmd_flowmenu(event):
   Use `.swipe` to start a swipe flood.
 
 【 🌊 𝗙𝗟𝗢𝗪 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  ✦ .swipe <text>            → swipe with custom text
-  ✦ .swipe                   → swipe using default texts
-  ✦ .stopswipe               → stop swipe flood
+  ✦ .swipe <text>           → swipe with custom text
+  ✦ .swipe                  → swipe using default texts
+  ✦ .stopswipe              → stop swipe flood
 
 【 🚀 𝗙𝗟𝗢𝗪 𝗦𝗣𝗘𝗘𝗗 】
-  ✦ .flowdelay <seconds>     → set delay between messages
-  ✦ .flowcount <n>           → set number of messages per swipe
+  ✦ .flowdelay <seconds>    → set delay between messages
+  ✦ .flowcount <n>          → set number of messages per swipe
 
 【 💡 𝗧𝗜𝗣 】
   Swipe uses the powerful text library from BEBO.
@@ -1474,14 +1437,7 @@ async def cmd_flowmenu(event):
        💖  BEBO — 𝗙𝗹𝗼𝘄 𝘄𝗶𝘁𝗵 𝗣𝗼𝘄𝗲𝗿
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     """
-    if video_file_id and os.path.exists(video_file_id):
-        try:
-            # Send as standard media (video/photo) with the menu as the integrated caption
-            await client.send_file(event.chat_id, video_file_id, caption=menu)
-        except Exception:
-            await event.reply(menu)
-    else:
-        await event.reply(menu)
+    await event.reply(menu)
 
 @command("help")
 async def cmd_help(event):
@@ -1490,11 +1446,9 @@ async def cmd_help(event):
 # ------------------------- FLOW BOT COMMANDS -------------------------
 flow_delay = 0.2
 flow_count = 30
-swipe_task = None
 
 @flow_command("swipe")
 async def cmd_swipe(event):
-    global swipe_task
     args = event.raw_text.split(maxsplit=1)
     if len(args) > 1:
         text = args[1]
@@ -1506,16 +1460,17 @@ async def cmd_swipe(event):
             text = random.choice(all_texts)
         await event.reply(f"🌊 Swiping with random text.")
     chat = event.chat
-    if swipe_task and not swipe_task.done():
-        swipe_task.cancel()
-    swipe_task = asyncio.create_task(swipe_loop(event, chat, text))
+    
+    if "swipe" in active_tasks:
+        active_tasks["swipe"].cancel()
+        
+    active_tasks["swipe"] = asyncio.create_task(swipe_loop(event, chat, text))
     await event.reply(f"✅ Swipe started! {flow_count} messages with delay {flow_delay}s. Use .stopswipe to stop.")
 
 @flow_command("stopswipe")
 async def cmd_stopswipe(event):
-    global swipe_task
-    if swipe_task and not swipe_task.done():
-        swipe_task.cancel()
+    if "swipe" in active_tasks:
+        active_tasks["swipe"].cancel()
         await event.reply("✅ Swipe stopped.")
     else:
         await event.reply("ℹ️ No active swipe.")
@@ -1553,7 +1508,7 @@ async def cmd_flowcount(event):
 async def swipe_loop(event, chat, text):
     try:
         for _ in range(flow_count):
-            if not flow_mode:
+            if not flow_mode or "swipe" not in active_tasks:
                 break
             try:
                 await client.send_message(chat, text)
@@ -1563,10 +1518,7 @@ async def swipe_loop(event, chat, text):
     except asyncio.CancelledError:
         pass
     finally:
-        global swipe_task
-        swipe_task = None
-        if flow_mode:
-            await event.reply("✅ Swipe finished.")
+        active_tasks.pop("swipe", None)
 
 # ------------------------- ANIMATION & BEAUTIFICATION -------------------------
 @command("start")
@@ -1590,7 +1542,7 @@ async def cmd_welcome(event):
 ║   💖  The most powerful userbot          ║
 ║   ⚡  Fast, reliable, and stylish        ║
 ║                                          ║
-║   🛠️  Use `.menu` to explore             ║
+║   🛠️  Use `.menu` to explore            ║
 ║   🌊  Use `.flowmenu` for Flow mode      ║
 ║                                          ║
 ║   🎀  Made with ❤️ for the community    ║
@@ -1614,13 +1566,12 @@ async def cmd_about(event):
   🔹 **Language** : Python (Telethon)
 
   🌟 **Features** :
-  • Merged BEBO & BEBO engines
+  • Merged BEBO engines
   • Advanced Security & Defense protocols
   • Ultra‑fast raid & spam (Tsunami, Blitz)
   • Intelligent Auto-Delete & Smart Mute
   • Flow mode with swipe flood
   • 500+ built‑in texts
-  • Video menu display
   • Cloud dummy server
 
   💡 **Credits** : Powered by Telethon
@@ -1712,10 +1663,6 @@ async def bol_cmd(event):
 
 @command("safe")
 async def safe_cmd(event):
-    # Strictly enforce that only the owner can give access.
-    if event.sender_id != OWNER_ID and not event.out:
-        return await event.respond("❌ Only the owner can give admin access.")
-
     args = event.text.strip().split()[1:]
     if not args and not event.is_reply:
         if not state.safe_users:
@@ -1871,6 +1818,8 @@ async def stop_reply_raid_cmd(event):
     else:
         await event.respond("❌ **No active reply raid**")
 
+# Alias for .rr and .srr already defined, but .replyraid and .stopreplyraid now added.
+
 # Name change (from BEBO)
 @command("namechange")
 async def namechange_cmd(event):
@@ -1971,8 +1920,11 @@ async def blitz_cmd(event):
             return
     except:
         return
+    
     original_title = chat.title
     is_channel = hasattr(chat, 'megagroup') or hasattr(chat, 'broadcast')
+    state.blitz_active[chat_id] = True
+    
     msg = await event.respond("⚡ **WARMING UP BLITZ...**")
     await asyncio.sleep(0.3)
     status_msg = await msg.edit(f"⚡ **BEBO BLITZ MODE**\n🎯 100K changes\n💀 3s flood waits")
@@ -1981,7 +1933,7 @@ async def blitz_cmd(event):
         counter = 0
         start_time = time.time()
         flood_waits = 0
-        while counter < 100000:
+        while counter < 100000 and state.blitz_active.get(chat_id):
             try:
                 new_name = f"{random.choice(RANDOM_EMOJIS)} {original_title} {random.choice(COUNTRY_EMOJIS)} #{counter}"
                 if is_channel:
@@ -2000,9 +1952,21 @@ async def blitz_cmd(event):
                     flood_waits += 1
                     await asyncio.sleep(3)
                 continue
-        await status_msg.edit(f"✅ **BEBO BLITZ COMPLETE!**\n📊 {counter:,}\n⏱️ {time.time() - start_time:.1f}s\n🔥 DONE!")
+        if chat_id in state.blitz_active:
+            del state.blitz_active[chat_id]
+        try:
+            await status_msg.edit(f"✅ **BEBO BLITZ COMPLETE OR STOPPED!**\n📊 {counter:,}\n⏱️ {time.time() - start_time:.1f}s\n🔥 DONE!")
+        except:
+            pass
 
     asyncio.create_task(blitz_task())
+
+@command("stopblitz")
+async def stopblitz_cmd(event):
+    chat_id = event.chat_id
+    if chat_id in state.blitz_active:
+        del state.blitz_active[chat_id]
+        await event.respond("✅ **BLITZ STOPPED**")
 
 # Locks
 @command("lockname")
@@ -2142,7 +2106,7 @@ async def stopdominate_cmd(event):
 @command("emergency")
 async def emergency_cmd(event):
     chat_id = event.chat_id
-    if chat_id in state.emergency_active:
+    if chat_id in state.emergency_active and state.emergency_active[chat_id]:
         return await event.respond("⚠️ **Already active!**")
     state.emergency_active[chat_id] = True
     msg = await event.respond("⚠️ **WARNING: ENGAGING OVERDRIVE...**")
@@ -2186,7 +2150,7 @@ async def emergency_cmd(event):
 @command("stopemergency")
 async def stopemergency_cmd(event):
     chat_id = event.chat_id
-    if chat_id in state.emergency_active:
+    if chat_id in state.emergency_active and state.emergency_active[chat_id]:
         state.emergency_active[chat_id] = False
         if chat_id in state.autoswipe_active:
             del state.autoswipe_active[chat_id]
@@ -2512,6 +2476,18 @@ async def cmd_superraid(event):
         active_tasks[rtype] = task
         tasks.append(task)
     await event.reply(f"💥 Super raid started on {utils.get_display_name(user)} using all 5 raid types!")
+
+@command("stopsuper")
+async def cmd_stopsuper(event):
+    stopped = False
+    for rtype in ["reply", "rr", "flag", "hrr", "replygod"]:
+        if rtype in active_tasks:
+            active_tasks[rtype].cancel()
+            stopped = True
+    if stopped:
+        await event.reply("✅ **Super raid stopped.**")
+    else:
+        await event.reply("ℹ️ No active super raid.")
 
 # ------------------------- FUN COMMANDS -------------------------
 motivation_quotes = [
