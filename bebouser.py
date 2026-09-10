@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 START_TIME = time.time()
 
 # ─── BOT CONFIGURATION ────────────────────────────────────────────────────────
-BOT_TOKEN = "8629618999:AAG4CtSRQDZzr_bqPc5cDSiRn54JzwxoOGM"
+BOT_TOKEN = "8760438442:AAHODDkjr0rclSB7rnR67ac3UDX8tXYwCKY"
 OWNER_ID = 8115054010
 TELEGRAM_API_ID = 38843772
 TELEGRAM_API_HASH = "875fbb273801c8025d05e98173fca536"
@@ -269,9 +269,7 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
         except: pass
 
         if state.is_user_safe(sender_id, username): return True
-        try: await event.reply("bebo ko baap bana ke aa randyke!! 🖕💩")
-        except: pass
-        return False
+        return False # Silently ignore unauthorized commands
 
     def command(cmd):
         def decorator(func):
@@ -295,9 +293,15 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
         return decorator
 
     async def get_target(event):
+        if event.is_reply:
+            reply_msg = await event.get_reply_message()
+            try:
+                return await client.get_entity(reply_msg.sender_id)
+            except: pass
+
         args = event.raw_text.split(maxsplit=1)
         if len(args) < 2:
-            await event.reply("⚠️ Please specify a target username or ID.")
+            await event.reply("⚠️ Please specify a target username or ID, or reply to a message.")
             return None
         target_str = args[1].strip()
         if target_str.startswith("@"): target_str = target_str[1:]
@@ -308,11 +312,22 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             await event.reply(f"❌ Could not find user: {e}")
             return None
 
-    async def get_target_from_str(event, target_str):
-        if target_str.startswith("@"): target_str = target_str[1:]
+    async def get_user_from_arg(event):
+        if event.is_reply:
+            reply_msg = await event.get_reply_message()
+            try:
+                return await client.get_entity(reply_msg.sender_id)
+            except: pass
+
+        args = event.raw_text.split(maxsplit=1)
+        if len(args) < 2:
+            await event.reply("⚠️ Please specify a user (username or ID), or reply to a message.")
+            return None
+        target = args[1].strip()
         try:
-            if target_str.isdigit(): return await client.get_entity(int(target_str))
-            else: return await client.get_entity(target_str)
+            if target.startswith("@"): target = target[1:]
+            if target.isdigit(): return await client.get_entity(int(target))
+            else: return await client.get_entity(target)
         except Exception as e:
             await event.reply(f"❌ Could not find user: {e}")
             return None
@@ -817,20 +832,6 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
         await event.reply("✅ Fast GC stopped.")
 
     # ------------------------- ADMIN COMMANDS -------------------------
-    async def get_user_from_arg(event):
-        args = event.raw_text.split(maxsplit=1)
-        if len(args) < 2:
-            await event.reply("⚠️ Please specify a user.")
-            return None
-        target = args[1].strip()
-        try:
-            if target.startswith("@"): target = target[1:]
-            if target.isdigit(): return await client.get_entity(int(target))
-            else: return await client.get_entity(target)
-        except Exception as e:
-            await event.reply(f"❌ Could not find user: {e}")
-            return None
-
     @command("mute")
     async def cmd_mute(event):
         if not event.is_group: return await event.reply("⚠️ Groups only.")
