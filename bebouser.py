@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 START_TIME = time.time()
 
 # ─── BOT CONFIGURATION ────────────────────────────────────────────────────────
-BOT_TOKEN = "8629618999:AAG4CtSRQDZzr_bqPc5cDSiRn54JzwxoOGM"
+BOT_TOKEN = "8760438442:AAHODDkjr0rclSB7rnR67ac3UDX8tXYwCKY"
 OWNER_ID = 8115054010
 TELEGRAM_API_ID = 38843772
 TELEGRAM_API_HASH = "875fbb273801c8025d05e98173fca536"
@@ -208,7 +208,7 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             self.autoswipe_active = {}
             self.adv_spam_active = {}
             self.namechange_active = {}
-            self.reply_raid_active = {}
+            self.raid_active = {}  # Unified raid active dictionary for incoming swipe raids
             self.blitz_active = {}
             self.locked_titles = {}
             self.swipe_targets = defaultdict(dict)
@@ -304,6 +304,15 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             await event.reply("⚠️ Please specify a target username or ID, or reply to a message.")
             return None
         target_str = args[1].strip()
+        if target_str.startswith("@"): target_str = target_str[1:]
+        try:
+            if target_str.isdigit(): return await client.get_entity(int(target_str))
+            else: return await client.get_entity(target_str)
+        except Exception as e:
+            await event.reply(f"❌ Could not find user: {e}")
+            return None
+
+    async def get_target_from_str(event, target_str):
         if target_str.startswith("@"): target_str = target_str[1:]
         try:
             if target_str.isdigit(): return await client.get_entity(int(target_str))
@@ -440,21 +449,17 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             except: pass
 
     @client.on(events.NewMessage(incoming=True))
-    async def reply_raid_handler(event):
+    async def global_raid_handler(event):
         if not state.bot_on or event.out: return
         chat_id = event.chat_id
-        if chat_id not in state.reply_raid_active: return
-        sender_id = event.sender_id
-        if not sender_id: return
-        target_data = state.reply_raid_active[chat_id].get(sender_id)
-        if not target_data: return
-
-        texts = target_data['texts']
-        index = target_data['index']
-        if index >= len(texts): index = 0
-        try: await event.reply(texts[index])
-        except: pass
-        target_data['index'] = (index + 1) % len(texts)
+        uid = event.sender_id
+        if not uid: return
+        
+        if chat_id in state.raid_active and uid in state.raid_active[chat_id]:
+            raid_data = state.raid_active[chat_id][uid]
+            text = random.choice(raid_data["texts"])
+            try: await event.reply(text)
+            except: pass
 
     # ------------------------- BASE COMMANDS -------------------------
     @command("on")
@@ -503,31 +508,31 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
         state.flow_mode = not state.flow_mode
         await event.reply(f"🔄 Flow mode is now **{'ON' if state.flow_mode else 'OFF'}**.\nUse `.flowmenu` for flow commands.")
 
-    # ------------------------- RAID COMMANDS -------------------------
-    async def raid_loop(chat, user, text_list, raid_type):
-        try:
-            while raid_type in state.active_tasks:
-                text = random.choice(text_list)
-                try:
-                    if getattr(user, 'username', None): await client.send_message(chat, f"{text} @{user.username}")
-                    else: await client.send_message(chat, f"{text} {user.first_name}")
-                except Exception: pass
-                await asyncio.sleep(0.3)
-        except asyncio.CancelledError: pass
-        finally: state.active_tasks.pop(raid_type, None)
-
+    # ------------------------- EVENT-DRIVEN RAID COMMANDS -------------------------
     async def start_raid(event, text_list, raid_type):
         user = await get_target(event)
         if not user: return
-        if raid_type in state.active_tasks: return await event.reply(f"⚠️ A {raid_type} raid is already running. Stop it with `.s{raid_type}` first.")
-        state.active_tasks[raid_type] = asyncio.create_task(raid_loop(event.chat, user, text_list, raid_type))
-        await event.reply(f"✅ {raid_type.capitalize()} raid started on {utils.get_display_name(user)}!")
+        chat_id = event.chat_id
+        
+        if chat_id not in state.raid_active:
+            state.raid_active[chat_id] = {}
+            
+        state.raid_active[chat_id][user.id] = {"texts": text_list, "type": raid_type}
+        await event.reply(f"✅ {raid_type.capitalize()} raid started on {utils.get_display_name(user)}! (Will swipe their messages)")
 
     async def stop_raid(event, raid_type):
-        if raid_type in state.active_tasks:
-            state.active_tasks[raid_type].cancel()
-            await event.reply(f"✅ {raid_type.capitalize()} raid stopped.")
-        else: await event.reply(f"ℹ️ No active {raid_type} raid.")
+        chat_id = event.chat_id
+        stopped = False
+        if chat_id in state.raid_active:
+            to_remove = [uid for uid, data in state.raid_active[chat_id].items() if data["type"] == raid_type]
+            for uid in to_remove:
+                del state.raid_active[chat_id][uid]
+                stopped = True
+            if not state.raid_active[chat_id]:
+                del state.raid_active[chat_id]
+                
+        if stopped: await event.reply(f"✅ {raid_type.capitalize()} raid stopped.")
+        else: await event.reply(f"ℹ️ No active {raid_type} raid in this chat.")
 
     @command("reply")
     async def cmd_reply(event): await start_raid(event, reply_texts, "reply")
@@ -553,6 +558,23 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
     async def cmd_replygod(event): await start_raid(event, attack_list + roast_list, "replygod")
     @command("sgod")
     async def cmd_sgod(event): await stop_raid(event, "replygod")
+
+    @command("replyraid")
+    async def reply_raid_cmd(event): await start_raid(event, GAALI_LIST, "replyraid")
+    @command("stopreplyraid")
+    async def stop_reply_raid_cmd(event): await stop_raid(event, "replyraid")
+
+    @command("superraid")
+    async def cmd_superraid(event):
+        user = await get_target(event)
+        if not user: return
+        chat_id = event.chat_id
+        all_texts_super = reply_texts + rr_texts + flag_texts + heart_replies + attack_list + roast_list
+        state.raid_active.setdefault(chat_id, {})[user.id] = {"texts": all_texts_super, "type": "superraid"}
+        await event.reply(f"💥 Super raid started on {utils.get_display_name(user)}!")
+
+    @command("stopsuper")
+    async def cmd_stopsuper(event): await stop_raid(event, "superraid")
 
     async def limited_raid_loop(chat, user, text, count):
         try:
@@ -834,23 +856,33 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
     # ------------------------- ADMIN COMMANDS -------------------------
     @command("mute")
     async def cmd_mute(event):
-        if not event.is_group: return await event.reply("⚠️ Groups only.")
         user = await get_user_from_arg(event)
         if not user: return
-        try:
-            await client.edit_permissions(event.chat_id, user, ChatBannedRights(until_date=None, send_messages=True, send_media=True, send_stickers=True, send_gifs=True, send_games=True, send_inline=True, send_polls=True))
-            await event.reply(f"🔇 Muted {utils.get_display_name(user)}.")
-        except Exception as e: await event.reply(f"❌ Failed: {e}")
+        
+        if event.is_group:
+            try:
+                await client.edit_permissions(event.chat_id, user, ChatBannedRights(until_date=None, send_messages=True, send_media=True, send_stickers=True, send_gifs=True, send_games=True, send_inline=True, send_polls=True))
+                await event.reply(f"🔇 Muted {utils.get_display_name(user)}.")
+            except Exception as e: await event.reply(f"❌ Failed: {e}")
+        else:
+            state.delete_target_users[event.chat_id].add(user.id)
+            state.auto_delete_chats[event.chat_id] = True
+            await event.reply(f"🔇 Muted {utils.get_display_name(user)} in DM (Auto-deleting messages).")
 
     @command("unmute")
     async def cmd_unmute(event):
-        if not event.is_group: return await event.reply("⚠️ Groups only.")
         user = await get_user_from_arg(event)
         if not user: return
-        try:
-            await client.edit_permissions(event.chat_id, user, ChatBannedRights(until_date=None, send_messages=False, send_media=False, send_stickers=False, send_gifs=False, send_games=False, send_inline=False, send_polls=False))
-            await event.reply(f"🔊 Unmuted {utils.get_display_name(user)}.")
-        except Exception as e: await event.reply(f"❌ Failed: {e}")
+        
+        if event.is_group:
+            try:
+                await client.edit_permissions(event.chat_id, user, ChatBannedRights(until_date=None, send_messages=False, send_media=False, send_stickers=False, send_gifs=False, send_games=False, send_inline=False, send_polls=False))
+                await event.reply(f"🔊 Unmuted {utils.get_display_name(user)}.")
+            except Exception as e: await event.reply(f"❌ Failed: {e}")
+        else:
+            if event.chat_id in state.delete_target_users:
+                state.delete_target_users[event.chat_id].discard(user.id)
+            await event.reply(f"🔊 Unmuted {utils.get_display_name(user)} in DM.")
 
     @command("demote")
     async def cmd_demote(event):
@@ -1230,38 +1262,6 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             del state.autoswipe_active[event.chat_id]
             return await event.respond("✅ **MULTI-REPLY OFF**")
         await event.respond("❌ **Multi-reply is not active**")
-
-    @command("replyraid")
-    async def reply_raid_cmd(event):
-        chat_id = event.chat_id
-        target_uid, target_username = None, None
-        parts = event.text.strip().split()
-        if len(parts) > 1:
-            try:
-                ent = await client.get_entity(parts[1])
-                target_uid, target_username = ent.id, getattr(ent, 'username', None)
-            except: pass
-        if not target_uid and event.is_reply:
-            reply_msg = await event.get_reply_message()
-            target_uid = getattr(reply_msg, 'sender_id', None)
-            target_username = getattr(getattr(reply_msg, 'sender', None), 'username', None)
-        if not target_uid: return await event.respond("❌ **Please reply to a user or mention**")
-
-        state.reply_raid_active[chat_id] = {target_uid: {'texts': GAALI_LIST.copy(), 'index': 0}}
-        msg = await event.respond("🔥 **INITIALIZING REPLY RAID...**")
-        await asyncio.sleep(0.3)
-        await msg.edit("⚡ **TARGET LOCKED**")
-        await asyncio.sleep(0.3)
-        await msg.edit(f"💀 **REPLY RAID ON**\n🎯 Target: {target_username or target_uid}")
-
-    @command("stopreplyraid")
-    async def stop_reply_raid_cmd(event):
-        if event.chat_id in state.reply_raid_active:
-            del state.reply_raid_active[event.chat_id]
-            msg = await event.respond("🛑 **STOPPING REPLY RAID...**")
-            await asyncio.sleep(0.3)
-            await msg.edit("✅ **REPLY RAID OFF**")
-        else: await event.respond("❌ **No active reply raid**")
 
     @command("namechange")
     async def namechange_cmd(event):
@@ -1734,28 +1734,6 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             reply = random.choice(state.saved_texts) if state.saved_texts else random.choice(all_texts)
             try: await event.reply(reply)
             except Exception as e: logger.warning(f"Auto‑reply failed: {e}")
-
-    @command("superraid")
-    async def cmd_superraid(event):
-        user = await get_target(event)
-        if not user: return
-        chat = event.chat
-        raid_types = ["reply", "rr", "flag", "hrr", "replygod"]
-        text_lists = {"reply": reply_texts, "rr": rr_texts, "flag": flag_texts, "hrr": heart_replies, "replygod": attack_list + roast_list}
-        for rtype in raid_types:
-            if rtype in state.active_tasks: state.active_tasks[rtype].cancel()
-        for rtype in raid_types: state.active_tasks[rtype] = asyncio.create_task(raid_loop(chat, user, text_lists[rtype], rtype))
-        await event.reply(f"💥 Super raid started on {utils.get_display_name(user)} using all 5 raid types!")
-
-    @command("stopsuper")
-    async def cmd_stopsuper(event):
-        stopped = False
-        for rtype in ["reply", "rr", "flag", "hrr", "replygod"]:
-            if rtype in state.active_tasks:
-                state.active_tasks[rtype].cancel()
-                stopped = True
-        if stopped: await event.reply("✅ **Super raid stopped.**")
-        else: await event.reply("ℹ️ No active super raid.")
 
     # ------------------------- FUN -------------------------
     motivation_quotes = [
