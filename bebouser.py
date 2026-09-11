@@ -208,8 +208,9 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             self.autoswipe_active = {}
             self.adv_spam_active = {}
             self.namechange_active = {}
-            self.raid_active = {}  # Unified raid active dictionary for incoming swipe raids
+            self.raid_active = {}  
             self.blitz_active = {}
+            self.react_active = {} # New property for auto reaction
             self.locked_titles = {}
             self.swipe_targets = defaultdict(dict)
             self.msg_log = defaultdict(lambda: deque())
@@ -269,7 +270,7 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
         except: pass
 
         if state.is_user_safe(sender_id, username): return True
-        return False # Silently ignore unauthorized commands
+        return False
 
     def command(cmd):
         def decorator(func):
@@ -379,6 +380,15 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             try:
                 await asyncio.sleep(state.delete_delay)
                 await event.delete()
+            except: pass
+
+    @client.on(events.NewMessage(incoming=True))
+    async def global_react_handler(event):
+        if not state.bot_on: return
+        if event.chat_id in state.react_active:
+            try:
+                emoji = random.choice(RANDOM_EMOJIS[:10]) 
+                await event.react(emoji)
             except: pass
 
     @client.on(events.NewMessage(incoming=True))
@@ -508,6 +518,21 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
         state.flow_mode = not state.flow_mode
         await event.reply(f"🔄 Flow mode is now **{'ON' if state.flow_mode else 'OFF'}**.\nUse `.flowmenu` for flow commands.")
 
+    @command("react")
+    async def cmd_react(event):
+        state.react_active[event.chat_id] = True
+        msg = await event.respond("🔄 **INITIALIZING REACT ENGINE...**")
+        await asyncio.sleep(0.3)
+        await msg.edit("✅ **REACT MODE ON**\nReacting to all messages in this chat!")
+
+    @command("sreact")
+    async def cmd_sreact(event):
+        if event.chat_id in state.react_active:
+            del state.react_active[event.chat_id]
+            await event.respond("✅ **REACT MODE OFF**")
+        else:
+            await event.respond("ℹ️ React mode is not active here.")
+
     # ------------------------- EVENT-DRIVEN RAID COMMANDS -------------------------
     async def start_raid(event, text_list, raid_type):
         user = await get_target(event)
@@ -518,7 +543,11 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
             state.raid_active[chat_id] = {}
             
         state.raid_active[chat_id][user.id] = {"texts": text_list, "type": raid_type}
-        await event.reply(f"✅ {raid_type.capitalize()} raid started on {utils.get_display_name(user)}! (Will swipe their messages)")
+        
+        if raid_type == "rr":
+            await event.reply(f"rr started on {user.id}")
+        else:
+            await event.reply(f"✅ {raid_type.capitalize()} raid started on {utils.get_display_name(user)}! (Will swipe their messages)")
 
     async def stop_raid(event, raid_type):
         chat_id = event.chat_id
@@ -927,141 +956,154 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
     # ------------------------- MENUS -------------------------
     @command("menu")
     async def cmd_menu(event):
+        msg = await event.reply("🔄 **INITIALIZING MASTER MENU...**")
+        await asyncio.sleep(0.2)
+        await msg.edit("⚙️ **LOADING MODULES...**")
+        await asyncio.sleep(0.2)
         menu = """
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      💖  BEBO ULTIMATE  💖
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╔═══════════════════════════════════════════╗
+║         💖  𝐁𝐄𝐁𝐎 𝐔𝐋𝐓𝐈𝐌𝐀𝐓𝐄 𝐌𝐄𝐍𝐔  💖        ║
+╚═══════════════════════════════════════════╝
 
-  📌 .menu      → This menu
-  📌 .flowmenu  → Flow Bot menu
-  📌 .advmenu   → Advanced Security & Tools Menu
-  📌 .about     → About BEBO
-  📌 .banner    → Show ASCII art
+  📌 `.menu`      → This Menu
+  📌 `.flowmenu`  → Flow Bot Menu
+  📌 `.advmenu`   → Advanced Security Menu
+  📌 `.about`     → About BEBO
+  📌 `.banner`    → Show ASCII Art
 
 【 🛠️ 𝗕𝗔𝗦𝗜𝗖 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  /on, /off, /ping, /echo, /stats, /info, /restart, /switch
+  `/on`, `/off`, `/ping`, `/echo`, `/stats`, `/info`, `/restart`, `/switch`
 
 【 ⚔️ 𝗥𝗔𝗜𝗗 𝗘𝗡𝗚𝗜𝗡𝗘 】
-  💬 Reply  → .reply @user   | .sreply
-  🤣 RR     → .rr @user      | .srr
-  🚩 Flag   → .flag @user    | .sflag
-  💗 Heart  → .hrr @user     | .shrr
-  😈 God    → .replygod @user| .sgod
-  📌 Limited → .replybebo @user <text> <count> | .sstop
-  ⚡ Super  → .superraid @user | .stopsuper
-  🔥 BEBO Raid → .raid <count> | .stopraid
+  💬 Reply      → `.reply @user`    | `.sreply`
+  🤣 RR         → `.rr @user`       | `.srr`
+  🚩 Flag       → `.flag @user`     | `.sflag`
+  💗 Heart      → `.hrr @user`      | `.shrr`
+  😈 God        → `.replygod @user` | `.sgod`
+  📌 Limited    → `.replybebo @user <text> <count>` | `.sstop`
+  ⚡ Super      → `.superraid @user`| `.stopsuper`
+  🔥 BEBO Raid  → `.raid <count>`   | `.stopraid`
 
 【 💣 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 】
-  ✦ .spam <mode> <text> (fast, medium, slow, burst, random, tsunami, nightmare)
-  ✦ .spray <text>          → 10x spray
-  ✦ .dspray <text>         → delete & spray
-  ✦ .tspray <count> <delay> <text>
-  ✦ .rspray                → random text spam
-  ✦ .multispray <text1|text2|...>
-  ✦ .countspray <n> <text>
-  ✦ .spraydelay <seconds>
-  ✦ .stopspray / .stopadvspam
+  ✦ `.spam <mode> <text>` (fast, medium, slow, burst, random, tsunami, nightmare)
+  ✦ `.spray <text>`          → 10x spray
+  ✦ `.dspray <text>`         → delete & spray
+  ✦ `.tspray <n> <del> <t>`  → timed spray
+  ✦ `.rspray`                → random text spam
+  ✦ `.multispray <t1|t2...>` 
+  ✦ `.countspray <n> <text>`
+  ✦ `.spraydelay <sec>`
+  ✦ `.stopspray` / `.stopadvspam`
 
 【 📝 𝗧𝗘𝗫𝗧 𝗠𝗔𝗡𝗔𝗚𝗘𝗥 】
-  .addtext, .listtexts, .edittext, .deltext, .cleartext
+  `.addtext`, `.listtexts`, `.edittext`, `.deltext`, `.cleartext`
 
 【 🚀 𝗙𝗔𝗦𝗧 𝗚𝗖 】
-  .fastgc set <emoji> <template>   | .fastgc stop
+  `.fastgc set <emoji> <template>` | `.fastgc stop`
 
 【 👑 𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  .mute, .unmute, .promote, .demote, .kick, .ban
-  .pin (reply), .unpin, .slowmode <sec>, .setgrouptitle <title>
-  .setgrouppic (reply to photo), .adminlist, .banlist
-  .purge <n>  (delete n messages)
+  `.mute`, `.unmute`, `.promote`, `.demote`, `.kick`, `.ban`
+  `.pin` (reply), `.unpin`, `.slowmode <sec>`, `.setgrouptitle <title>`
+  `.setgrouppic` (reply to photo), `.adminlist`, `.banlist`
+  `.purge <n>` (delete n messages)
 
-【 ✨ 𝗨𝗧𝗜𝗟𝗜𝗧𝗬 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  .id @user      → get user/chat ID
-  .tagall [text] → mention everyone
-  .warn @user    → warn a user
-  .kickme        → bot leaves the group
-  .join <link>   → join group via link
-  .setpfp (reply) → change bot's profile pic
-  .setname <name> → change bot's name
-  .setbio <bio>   → change bot's bio
-  .autoreply on/off → toggle auto‑reply
+【 ✨ 𝗨𝗧𝗜𝗟𝗜𝗧𝗬 & 𝗙𝗨𝗡 】
+  `.react`       → React to every msg 
+  `.sreact`      → Stop reactions
+  `.id @user`    → get user/chat ID
+  `.tagall`      → mention everyone
+  `.warn @user`  → warn a user
+  `.kickme`      → leave group
+  `.join <link>` → join via link
+  `.setpfp`      → set profile pic
+  `.setname`     → set bot's name
+  `.setbio`      → set bot's bio
+  `.autoreply`   → toggle auto-reply
+  Fun: `.motivate`, `.truth`, `.dare`, `.shayari`, `.joke`, `.quote`
 
-【 🎭 𝗙𝗨𝗡 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  .motivate, .truth, .dare, .shayari, .joke, .quote
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       💖  BEBO — 𝗔𝗹𝗹 𝗥𝗶𝗴𝗵𝘁𝘀 𝗥𝗲𝘀𝗲𝗿𝘃𝗲𝗱
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╔═══════════════════════════════════════════╗
+║         💖  BEBO — 𝗔𝗹𝗹 𝗥𝗶𝗴𝗵𝘁𝘀 𝗥𝗲𝘀𝗲𝗿𝘃𝗲𝗱       ║
+╚═══════════════════════════════════════════╝
         """
-        await event.reply(menu)
+        await msg.edit(menu)
 
     @command("advmenu")
     async def cmd_advmenu(event):
+        msg = await event.reply("🔄 **INITIALIZING SECURITY...**")
+        await asyncio.sleep(0.3)
         menu = """
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   🛡️  BEBO ADVANCED SECURITY & TOOLS  🛡️
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╔═══════════════════════════════════════════╗
+║    🛡️  𝐁𝐄𝐁𝐎 𝐀𝐃𝐕𝐀𝐍𝐂𝐄𝐃 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 𝐌𝐄𝐍𝐔  🛡️   ║
+╚═══════════════════════════════════════════╝
 
 【 🗑️ 𝗠𝗨𝗧𝗘 𝗖𝗢𝗡𝗧𝗥𝗢𝗟𝗦 】
-  • .sabchup / .speakall
-  • .chup / .bol (reply to user)
-  • .safe @user
+  • `.sabchup` / `.speakall`
+  • `.chup` / `.bol` (reply to user)
+  • `.safe @user`
 
 【 💣 𝗔𝗗𝗩𝗔𝗡𝗖𝗘𝗗 𝗦𝗣𝗔𝗠 & 𝗥𝗔𝗜𝗗 】
-  • .advspam <mode> <text> (fast, medium, slow, burst, random, tsunami, nightmare)
-  • .stopadvspam
-  • .replyraid @user | .stopreplyraid
-  • .autoswipe <text> | .stopautoswipe
-  • .advmultireply <n> <text> | .stopadvmultireply
+  • `.advspam <mode> <text>`
+  • `.stopadvspam`
+  • `.replyraid @user` | `.stopreplyraid`
+  • `.autoswipe <text>` | `.stopautoswipe`
+  • `.advmultireply <n> <text>` | `.stopadvmultireply`
 
 【 🔄 𝗡𝗔𝗠𝗘 𝗖𝗢𝗡𝗧𝗥𝗢𝗟𝗦 】
-  • .namechange [mode] [ms] (normal, time, emoji, owns, enters, dad)
-  • .namedelay <ms> | .stopnamechange
-  • .blitz [mode] | .stopblitz
+  • `.namechange [mode] [ms]` 
+  • `.namedelay <ms>` | `.stopnamechange`
+  • `.blitz [mode]` | `.stopblitz`
 
 【 🔐 𝗦𝗘𝗖𝗨𝗥𝗜𝗧𝗬 𝗟𝗢𝗖𝗞𝗦 】
-  • .lockname | .lockgroup | .unlockgroup
-  • .lockchat | .unlockchat | .locknamechange | .unlocknamechange
+  • `.lockname` | `.lockgroup` | `.unlockgroup`
+  • `.lockchat` | `.unlockchat` 
+  • `.locknamechange` | `.unlocknamechange`
 
 【 🛡️ 𝗣𝗥𝗢𝗧𝗘𝗖𝗧𝗜𝗢𝗡 & 𝗘𝗠𝗘𝗥𝗚𝗘𝗡𝗖𝗬 】
-  • .boost on/off | .assist on/off | .perf
-  • .terminate | .killname | .dominate | .stopdominate
-  • .emergency | .stopemergency
+  • `.boost on/off` | `.assist on/off` | `.perf`
+  • `.terminate` | `.killname` 
+  • `.dominate` | `.stopdominate`
+  • `.emergency` | `.stopemergency`
 
 【 📦 𝗨𝗧𝗜𝗟𝗜𝗧𝗜𝗘𝗦 】
-  • .makegc <name> | .lockswipe @user <text>
-  • .hindivoice <text> (if module available)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  • `.makegc <name>` | `.lockswipe @user <text>`
+  • `.hindivoice <text>` 
+
+╔═══════════════════════════════════════════╗
+║     🛡️  BEBO — 𝗨𝗹𝘁𝗶𝗺𝗮𝘁𝗲 𝗣𝗿𝗼𝘁𝗲𝗰𝘁𝗶𝗼𝗻     ║
+╚═══════════════════════════════════════════╝
         """
-        await event.reply(menu)
+        await msg.edit(menu)
 
     @command("flowmenu")
     async def cmd_flowmenu(event):
+        msg = await event.reply("🌊 **INITIALIZING FLOW ENGINE...**")
+        await asyncio.sleep(0.3)
         menu = """
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      💖  BEBO FLOW BOT  💖
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╔═══════════════════════════════════════════╗
+║          🌊  𝐁𝐄𝐁𝐎 𝐅𝐋𝐎𝐖 𝐁𝐎𝐓 𝐌𝐄𝐍𝐔  🌊       ║
+╚═══════════════════════════════════════════╝
 
-  🌊 This is the high‑speed flow engine.
+  🌊 This is the high-speed flow engine.
   Use `.swipe` to start a swipe flood.
 
 【 🌊 𝗙𝗟𝗢𝗪 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 】
-  ✦ .swipe <text>           → swipe with custom text
-  ✦ .swipe                  → swipe using default texts
-  ✦ .stopswipe              → stop swipe flood
+  ✦ `.swipe <text>`     → swipe with custom text
+  ✦ `.swipe`            → swipe using default texts
+  ✦ `.stopswipe`        → stop swipe flood
 
 【 🚀 𝗙𝗟𝗢𝗪 𝗦𝗣𝗘𝗘𝗗 】
-  ✦ .flowdelay <seconds>    → set delay between messages
-  ✦ .flowcount <n>          → set number of messages per swipe
+  ✦ `.flowdelay <sec>`  → set delay between messages
+  ✦ `.flowcount <n>`    → set number of messages per swipe
 
 【 💡 𝗧𝗜𝗣 】
   Swipe uses the powerful text library from BEBO.
   You can also add your own texts with `.addtext`.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       💖  BEBO — 𝗙𝗹𝗼𝘄 𝘄𝗶𝘁𝗵 𝗣𝗼𝘄𝗲𝗿
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╔═══════════════════════════════════════════╗
+║          🌊  BEBO — 𝗙𝗹𝗼𝘄 𝘄𝗶𝘁𝗵 𝗣𝗼𝘄𝗲𝗿       ║
+╚═══════════════════════════════════════════╝
         """
-        await event.reply(menu)
+        await msg.edit(menu)
 
     @command("help")
     async def cmd_help(event):
@@ -1129,11 +1171,11 @@ def register_userbot_engine(client: TelegramClient, user_id: int):
   ╔═╗╔╗╔╔═╗╦ ╦╔═╗
   ╠═╣║║║║ ╦║ ║║╣
   ╩ ╩╝╚╝╚═╝╚═╝╚═╝
-         💖 𝐁𝐄𝐁𝐎 💖
+          💖 𝐁𝐄𝐁𝐎 💖
 """
     @command("welcome")
     async def cmd_welcome(event):
-        await event.reply(f"╔══════════════════════════════════════════╗\n║                                          ║\n║   ✨  𝐖𝐄𝐋𝐂𝐎𝐌𝐄  𝐓𝐎  𝐁𝐄𝐁𝐎  ✨     ║\n║                                          ║\n║   💖  The most powerful userbot          ║\n║   ⚡  Fast, reliable, and stylish        ║\n║                                          ║\n║   🛠️  Use `.menu` to explore            ║\n║   🌊  Use `.flowmenu` for Flow mode      ║\n║                                          ║\n║   🎀  Made with ❤️ for the community    ║\n║                                          ║\n╚══════════════════════════════════════════╝\n\n{BANNER}")
+        await event.reply(f"╔══════════════════════════════════════════╗\n║                                          ║\n║   ✨  𝐖𝐄𝐋𝐂𝐎𝐌𝐄  𝐓𝐎  𝐁𝐄𝐁𝐎  ✨     ║\n║                                          ║\n║   💖  The most powerful userbot          ║\n║   ⚡  Fast, reliable, and stylish        ║\n║                                          ║\n║   🛠️  Use `.menu` to explore             ║\n║   🌊  Use `.flowmenu` for Flow mode      ║\n║                                          ║\n║   🎀  Made with ❤️ for the community    ║\n║                                          ║\n╚══════════════════════════════════════════╝\n\n{BANNER}")
 
     @command("about")
     async def cmd_about(event):
@@ -2325,11 +2367,24 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cmd_commands(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_blocked(update): return
-    await update.message.reply_text(SID_MASTER_MENU, parse_mode=ParseMode.MARKDOWN)
+    # Animated implementation handled in bot callback, static here
+    menu = """
+╔═══════════════════════════════════════════╗
+║         💖  𝐁𝐄𝐁𝐎 𝐔𝐋𝐓𝐈𝐌𝐀𝐓𝐄 𝐌𝐄𝐍𝐔  💖        ║
+╚═══════════════════════════════════════════╝
+    (Reply on Userbot side using `.menu` for full interface)
+    """
+    await update.message.reply_text(menu, parse_mode=ParseMode.MARKDOWN)
 
 async def cmd_flowmenu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_blocked(update): return
-    await update.message.reply_text(SID_FLOW_BOT_MENU, parse_mode=ParseMode.MARKDOWN)
+    menu = """
+╔═══════════════════════════════════════════╗
+║          🌊  𝐁𝐄𝐁𝐎 𝐅𝐋𝐎𝐖 𝐁𝐎𝐓 𝐌𝐄𝐍𝐔  🌊       ║
+╚═══════════════════════════════════════════╝
+    (Reply on Userbot side using `.flowmenu` for full interface)
+    """
+    await update.message.reply_text(menu, parse_mode=ParseMode.MARKDOWN)
 
 # ════════════════════════════════════════════════════════════════════════════════
 #   /host — Phone + OTP Login Flow
@@ -3258,11 +3313,29 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data == "commands":
-        await query.message.reply_text(SID_MASTER_MENU, parse_mode=ParseMode.MARKDOWN)
+        msg = await query.message.reply_text("🔄 **INITIALIZING MASTER MENU...**")
+        await asyncio.sleep(0.2)
+        await msg.edit("⚙️ **LOADING MODULES...**")
+        await asyncio.sleep(0.2)
+        menu = """
+╔═══════════════════════════════════════════╗
+║         💖  𝐁𝐄𝐁𝐎 𝐔𝐋𝐓𝐈𝐌𝐀𝐓𝐄 𝐌𝐄𝐍𝐔  💖        ║
+╚═══════════════════════════════════════════╝
+    (Reply on Userbot side using `.menu` for full interface)
+    """
+        await msg.edit(menu, parse_mode=ParseMode.MARKDOWN)
         return
 
     if data == "flow_menu":
-        await query.message.reply_text(SID_FLOW_BOT_MENU, parse_mode=ParseMode.MARKDOWN)
+        msg = await query.message.reply_text("🌊 **INITIALIZING FLOW ENGINE...**")
+        await asyncio.sleep(0.3)
+        menu = """
+╔═══════════════════════════════════════════╗
+║          🌊  𝐁𝐄𝐁𝐎 𝐅𝐋𝐎𝐖 𝐁𝐎𝐓 𝐌𝐄𝐍𝐔  🌊       ║
+╚═══════════════════════════════════════════╝
+    (Reply on Userbot side using `.flowmenu` for full interface)
+    """
+        await msg.edit(menu, parse_mode=ParseMode.MARKDOWN)
         return
 
     if data == "status":
@@ -3287,7 +3360,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             phone = _phone_label(acct)
             lines.append(
                 f"{icon} {sans_bold('Acc #' + str(slot+1))} — {mono(phone)}\n"
-                f"   ⏱️ {uptime}   📅 {since}"
+                f"   ⏱️ {uptime}  📅 {since}"
             )
         footer = ""
         if any(not runner.is_running(uid, a["slot"]) for a in hosted):
